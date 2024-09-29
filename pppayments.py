@@ -1,16 +1,19 @@
 #!/usr/bin/env python3
 # Name: pppayments.py
-# Version: 0.1
+# Version: 0.2
 # Author: mou
 # Description: This script reads PayPal transaction logs from an SQLite database, creates daily summaries,
 # sends these summaries to a Telegram bot, and records the time the message was sent.
 # It prevents duplicate entries and manages database size by deleting entries older than user-defined days.
+# It also supports viewing logs via the -v option and handles network errors with retry logic.
 # Designed for daily execution via a cron job.
 
 import sqlite3
 from datetime import datetime, timedelta
 import os
 import sys
+import argparse
+import time
 import requests
 from dotenv import load_dotenv
 import logging
@@ -34,6 +37,10 @@ TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 # Rotating log file settings
 LOG_MAX_SIZE_BYTES = 5 * 1024 * 1024  # 5 MB per log file
 LOG_BACKUP_COUNT = 5  # Number of log files to keep
+
+# Network settings for retry mechanism
+MAX_RETRIES = 3  # Maximum number of retry attempts
+RETRY_WAIT_INTERVAL = 5  # Time (in seconds) to wait between retries
 # ------------------------------------------------------------------------- #
 
 # Set up logging
@@ -46,6 +53,17 @@ logger.addHandler(handler)
 
 # Load environment variables
 load_dotenv()
+
+# Argument Parser for command-line options
+parser = argparse.ArgumentParser(description='PayPal payments processing script with Telegram notifications.')
+parser.add_argument('-v', '--view-log', action='store_true', help='View the log file entries.')
+args = parser.parse_args()
+
+# If -v or --view-log is passed, display the log contents and exit
+if args.view_log:
+    with open(LOG_FILE_NAME, 'r') as log_file:
+        print(log_file.read())
+    sys.exit(0)
 
 
 def initialize_database_connection():
@@ -110,15 +128,25 @@ def insert_daily_summary(cursor, date, total_transactions, total_amount, summary
 
 
 def send_telegram_message(message):
-    """Send a message to the Telegram bot and return success status."""
+    """Send a message to the Telegram bot with retry logic and return success status."""
     url = f'https://api.telegram.org/bot{TELEGRAM_BOT_TOKEN}/sendMessage'
     payload = {'chat_id': TELEGRAM_CHAT_ID, 'text': message}
-    try:
-        response = requests.post(url, data=payload)
-        return response.status_code == 200
-    except requests.RequestException as e:
-        logger.error(f"Failed to send Telegram message: {e}")
-        return False
+
+    for attempt in range(1, MAX_RETRIES + 1):
+        try:
+            response = requests.post(url, data=payload)
+            if response.status_code == 200:
+                return True
+            else:
+                logger.warning(f"Telegram message failed (Status {response.status_code}). Attempt {attempt}/{MAX_RETRIES}.")
+        except requests.RequestException as e:
+            logger.error(f"Network error on attempt {attempt}/{MAX_RETRIES}: {e}")
+
+        if attempt < MAX_RETRIES:
+            logger.info(f"Retrying in {RETRY_WAIT_INTERVAL} seconds...")
+            time.sleep(RETRY_WAIT_INTERVAL)
+
+    return False
 
 
 def update_telegram_status(cursor, date):
@@ -166,3 +194,4 @@ def main():
 
 if __name__ == "__main__":
     main()
+
