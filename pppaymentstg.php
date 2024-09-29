@@ -1,7 +1,7 @@
 <?php
 /*
  * Script Name: pppaymentstg.php
- * Version: 1.0
+ * Version: 0.1
  * 
  * Description:
  * - Reads PayPal transaction logs from the MySQL database.
