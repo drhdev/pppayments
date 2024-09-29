@@ -36,7 +36,7 @@ define('DB_PASS', getenv('DB_PASS'));
 
 // Log file path and settings
 define('LOG_FILE', 'pppayments.log');
-define('DAYS_TO_KEEP', 30); // Number of days after which old records are deleted
+define('DAYS_TO_KEEP', 730); // Number of days after which old records are deleted
 
 // Telegram Bot Configuration
 define('TELEGRAM_BOT_TOKEN', getenv('TELEGRAM_BOT_TOKEN'));
