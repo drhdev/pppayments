@@ -1,7 +1,7 @@
 <?php
 /*
  * Script Name: pppaymentswh.php
- * Version: 2.2
+ * Version: 0.2
  * 
  * Description:
  * - Listens for incoming PayPal webhook notifications.
