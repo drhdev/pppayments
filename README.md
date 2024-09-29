@@ -1,6 +1,8 @@
 # pppayments
 Two PHP scripts...
 
+Python script not needed anymore?
+
 
 ### Directory Structure
 
