@@ -2,7 +2,7 @@
 Two PHP scripts...
 
 
-### UDirectory Structure
+### Directory Structure
 
 ```
 /var/www/example.com/                 # Project root directory
@@ -131,3 +131,120 @@ This setup ensures that:
 - The `.env` file remains in a secure location (`/var/www/example.com`) and is not directly accessible via the web server.
 - The PHP scripts in `pppayments/` can correctly access the environment variables.
 
+### Setting up a cronjob for pppaymentstg.php
+
+To set up a cron job for `pppaymentstg.php` to run at a scheduled time (e.g., once daily), follow these instructions. Cron is a powerful tool in Unix/Linux-based systems that allows you to schedule tasks, such as executing scripts at specified intervals.
+
+### Step 1: Determine the PHP Path
+
+First, identify the path to your PHP executable. This can vary depending on your server setup. Run the following command to get the PHP path:
+
+```bash
+which php
+```
+
+This will typically return a path like `/usr/bin/php` or `/usr/local/bin/php`. Make a note of this path, as you'll need it for the cron job.
+
+### Step 2: Verify `pppaymentstg.php` Script Permissions
+
+Ensure that the script `pppaymentstg.php` has executable permissions and that the user running the cron job has access to the script:
+
+```bash
+sudo chmod +x /var/www/example.com/pppayments/pppaymentstg.php
+```
+
+Make sure the owner of the script matches the user running the cron job (typically `www-data` for Apache).
+
+### Step 3: Open the Crontab for the Desired User
+
+Typically, you will want to set the cron job for the user running the web server (e.g., `www-data`), or if you are running it as your own user, use your own crontab:
+
+- **For the current user**:
+  
+  ```bash
+  crontab -e
+  ```
+
+- **For a specific user** (e.g., `www-data`):
+
+  ```bash
+  sudo crontab -u www-data -e
+  ```
+
+This command opens the crontab editor for the specified user. If this is the first time setting up a cron job, you might be prompted to choose an editor (e.g., `nano`).
+
+### Step 4: Add the Cron Job to the Crontab
+
+Add the following line to the crontab to schedule `pppaymentstg.php` to run once daily at a specific time (e.g., 11:00 PM). Adjust the time as needed:
+
+```bash
+0 23 * * * /usr/bin/php /var/www/example.com/pppayments/pppaymentstg.php >> /var/www/example.com/pppayments/cron.log 2>&1
+```
+
+**Explanation**:
+
+- `0 23 * * *` — This specifies that the script should run at **11:00 PM** every day:
+  - `0`: Minute (0th minute)
+  - `23`: Hour (23rd hour, which is 11:00 PM)
+  - `*`: Day of the month (every day)
+  - `*`: Month (every month)
+  - `*`: Day of the week (every day of the week)
+
+- `/usr/bin/php` — Path to the PHP executable. Replace this with the actual PHP path obtained earlier.
+- `/var/www/example.com/pppayments/pppaymentstg.php` — Full path to your `pppaymentstg.php` script.
+- `>> /var/www/example.com/pppayments/cron.log 2>&1` — Redirects both **standard output** and **standard error** to a log file (`cron.log`), located in the same directory as the script. This is useful for debugging cron job issues.
+
+### Step 5: Save and Exit the Crontab
+
+- If you're using `nano`, save and exit by pressing `Ctrl + X`, then `Y` to confirm changes, and `Enter`.
+- For `vi` or `vim`, use `:wq` to write and quit.
+
+### Step 6: Verify That the Cron Job Is Set
+
+You can view your current cron jobs by running:
+
+```bash
+crontab -l
+```
+
+This command will list all cron jobs for the current user. You should see the entry you just added.
+
+### Step 7: Manually Test the Script (Optional)
+
+To verify that the `pppaymentstg.php` script works correctly, run it manually from the command line:
+
+```bash
+/usr/bin/php /var/www/example.com/pppayments/pppaymentstg.php
+```
+
+Check the output for any errors or issues. If it runs successfully, your cron job should work as expected.
+
+### Step 8: Check the Log File
+
+Once the cron job runs, check the `cron.log` file to see the output and confirm that everything is running smoothly:
+
+```bash
+cat /var/www/example.com/pppayments/cron.log
+```
+
+If you encounter any issues, review this log file to see error messages or output from the script.
+
+### Troubleshooting Tips
+
+- **Cron Jobs Not Running**:
+  - Ensure that the `cron` service is running:
+    ```bash
+    sudo systemctl status cron
+    ```
+  - If it's not running, start it:
+    ```bash
+    sudo systemctl start cron
+    ```
+
+- **Permission Issues**:
+  - If the script or the `.env` file is not readable, you may need to adjust permissions or run the cron job as the correct user (e.g., `www-data`).
+
+- **PHP Version Conflicts**:
+  - If you have multiple PHP versions installed, make sure you specify the correct PHP executable path (e.g., `/usr/bin/php8.0`).
+
+This setup will ensure that `pppaymentstg.php` runs on a regular schedule and sends summaries to your Telegram bot as expected. Let me know if you need any further assistance or adjustments!
