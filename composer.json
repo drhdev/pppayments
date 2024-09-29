@@ -1,0 +1,17 @@
+{
+    "name": "yourusername/pppaymentswh",
+    "description": "PayPal webhook handler for logging and processing payments.",
+    "require": {
+        "php": "^7.4 || ^8.0",          // Define supported PHP versions
+        "vlucas/phpdotenv": "^5.5",      // Load environment variables from .env file
+        "monolog/monolog": "^2.3"        // Optional: Logging library
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "optimize-autoloader": true
+    }
+}
