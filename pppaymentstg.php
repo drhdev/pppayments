@@ -11,6 +11,13 @@
  * - Designed for daily execution via a cron job.
  */
 
+// Prevent script from running in a web context
+if (php_sapi_name() !== 'cli') {
+    header('HTTP/1.0 403 Forbidden');
+    echo "This script can only be run from the command line or a cron job.";
+    exit;
+}
+
 // Load Composer's autoload and environment variables
 require __DIR__ . '/../vendor/autoload.php';
 use Dotenv\Dotenv;
