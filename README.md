@@ -1,7 +1,8 @@
 # pppayments
 Two PHP scripts...
 
-Python script not needed anymore?
+- Python script not needed anymore?
+- Add Weekly and monthly payments summary at 1st day of new week and 1st day of new month with a dedicated script that calculates the values in the database. 
 
 
 ### Directory Structure
